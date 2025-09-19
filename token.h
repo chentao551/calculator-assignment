@@ -74,6 +74,7 @@ class calculator {
 			const auto& oper=opsmap.at(tokenvec[pos].name);
 			++pos;
 			double rhs = getoperand();
+			if (tokenvec[pos].name == "/" && rhs == 0)throw std::runtime_error("divided by zero at pos " + std::to_string(pos) + " !");
 			value = oper(value, rhs);
 		}
 		return value;	
@@ -118,6 +119,14 @@ class calculator {
 				value = lowerops();
 				args.push_back(value);
 			}
+			size_t expected = 0;
+			if (name == "sin" || name == "cos" || name == "sqrt") expected = 1;
+			else if (name == "pow") expected = 2;
+			// Add more functions as needed
+
+			if (args.size() != expected)
+				throw std::runtime_error("Function '" + name + "' expects " + std::to_string(expected) +
+					" argument(s), but got " + std::to_string(args.size()) + ".");
 			return ite->second(args);
 		}
 		//parse vars
@@ -128,7 +137,7 @@ class calculator {
 
 
 public:
-	calculator(std::vector<token>& intoken) : tokenvec(intoken), vecsize(intoken.size()), pos(0) {
+	calculator(std::vector<token>& intoken) : tokenvec(intoken), vecsize(intoken.size()), pos(0),curvalue(0) {
 		opsmap = {
 			{"+",[](double a, double b)->double { return a + b; } },
 			{"-",[](double a, double b)->double { return a - b; } },
@@ -138,7 +147,7 @@ public:
 		};
 
 		funcs = {
-			{"sin",[](const std::vector<double>& args)->double {double ss = std::sin(args[0]); ss = 0 && std::signbit(ss) ? 0 : ss; return ss;}},
+			{"sin",[](const std::vector<double>& args)->double {double ss = std::sin(args[0]); if(ss==0 && std::signbit(ss) ) ss= 0; return ss;}},
 			{"cos",[](const std::vector<double>& args)->double {return std::cos(args[0]);}},
 			{"sqrt",[](const std::vector<double>& args)->double {return std::sqrt(args[0]);}},
 			{"pow",[](const std::vector<double>& args)->double {return std::pow(args[0],args[1]);}}
@@ -196,7 +205,7 @@ public:
 				continue;
 			}
 
-			if (cc == '*' || cc == '/' || cc == '='|| cc == '+' || cc == '-') {
+			if (cc == '*' || cc == '/' || cc == '='|| cc == '+' || cc == '-'||cc=='^') {
 				tokenvec.push_back({ tokentype::Operator,std::string(1,cc) });
 				++pos;
 				continue;
@@ -228,7 +237,7 @@ public:
 				continue;
 			}
 
-			else throw std::runtime_error("unknown input " + std::string(1, expr[pos]) + "at position " + std::string(1, pos) + " !");
+			else throw std::runtime_error("unknown input " + std::string(1, expr[pos]) + "at position " + std::to_string(pos) + " !");
 		}
 		if (!tokenvec.empty() && tokenvec.back().name == "=")
 			tokenvec.pop_back();
@@ -243,7 +252,7 @@ public:
 	token getiden() {
 		size_t startpos = pos;
 		token identoken;
-		while (pos < exprsize && (isalpha(expr[pos])) || expr[pos] == '_') ++pos;
+		while (pos < exprsize && (isalpha(expr[pos]) || expr[pos] == '_')) ++pos;
 		identoken.type = tokentype::Iden;
 		identoken.name = expr.substr(startpos, pos - startpos);
 		return identoken;
