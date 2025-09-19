@@ -1,0 +1,43 @@
+// calculator-advanced.cpp : This file contains the 'main' function. Program execution begins and ends there.
+//
+
+#include <iostream>
+#include<algorithm>
+#include<string>
+#include "token.h"
+
+int main()
+{
+    std::cout << "Welcome to My calculator app!\n" << std::endl;
+    while (true) {
+        std::cout << "Please enter expression for calculation or enter exit to quit the app.\n" << std::endl;
+        std::string line;
+        std::getline(std::cin,line);
+        std::transform(line.begin(), line.end(), line.begin(), tolower);
+        if (line == "exit") {
+            std::cout << "Thanks for using My calculator app!\n" << std::endl;
+            return 0;
+        }
+        try {
+            tokenbuilder tbuilder(line);
+            //tbuilder.printvec();
+            calculator worker(tbuilder.tokenvec);
+            worker.calcuexpr();
+            worker.printresult();
+        }
+        catch (const std::runtime_error& re) {
+            std::cout << re.what() << std::endl;
+        }        
+    }
+}
+
+// Run program: Ctrl + F5 or Debug > Start Without Debugging menu
+// Debug program: F5 or Debug > Start Debugging menu
+
+// Tips for Getting Started: 
+//   1. Use the Solution Explorer window to add/manage files
+//   2. Use the Team Explorer window to connect to source control
+//   3. Use the Output window to see build output and other messages
+//   4. Use the Error List window to view errors
+//   5. Go to Project > Add New Item to create new code files, or Project > Add Existing Item to add existing code files to the project
+//   6. In the future, to open this project again, go to File > Open > Project and select the .sln file
