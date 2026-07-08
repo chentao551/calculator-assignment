@@ -5,6 +5,8 @@
 #include <vector>
 #include <functional>
 #include <unordered_map>
+#include<sstream>
+#include<iomanip>
 
 
 
@@ -15,11 +17,12 @@ enum class tokentype {
 	Number,
 	Operator,
 	Comma,
-	Iden
+	Iden,
+	Other
 };
 
 struct token {
-	tokentype type;
+	tokentype type=tokentype::Other;
 	std::string name="";
 	double value=0;
 };
@@ -50,23 +53,22 @@ class calculator {
 	};
 	
 	double getunary() {
+		int sign = 1;
 		if (tokenvec[pos].name == "-") {
 			++pos;
-			double value = getoperand();
-			return -value;
+			sign = -1;			
 		}
-		if (tokenvec[pos].name == "+") {
-			++pos;
-			return getoperand();
+		else if (tokenvec[pos].name == "+") {
+			++pos;			
 		}
-		return getoperand();
-		}
+		return sign*getoperand();
+	}
 	
 	double getoperand() {
 		tokentype tt = tokenvec[pos].type;		
 		auto ite = handlers.find(tt);
 		if (ite == handlers.end())throw std::runtime_error("invalid token '" + tokenvec[pos].name + "' at pos " + std::to_string(pos));
-		return handlers.at(tt)();
+		return ite->second();
 	}
 	double higherops() {
 		size_t operpos;
@@ -76,7 +78,7 @@ class calculator {
 			operpos = pos;
 			++pos;
 			if (pos < vecsize) {
-				rhs = getoperand();
+				rhs = getunary();
 			}
 			else {
 				throw std::runtime_error("missing operand at " + std::to_string(pos) + " !");
@@ -188,8 +190,14 @@ public:
 		for (auto& tk : tokenvec) {
 			std::cout << tk.name << " ";
 		}
-		std::cout << "= " << std::to_string(curvalue) << std::endl;
+		std::cout << "= " << formatdouble(curvalue) << std::endl;
 	};
+
+	std::string formatdouble(double value) {
+		std::ostringstream result;
+		result << std::setprecision(6) << value;
+		return result.str();
+	}
 };
 
 
