@@ -69,23 +69,35 @@ class calculator {
 		return handlers.at(tt)();
 	}
 	double higherops() {
-		double value = getunary();
+		size_t operpos;
+		double value = getunary(), rhs;
 		while (pos < vecsize && (tokenvec[pos].name == "*" || tokenvec[pos].name == "/")) {
 			const auto& oper=opsmap.at(tokenvec[pos].name);
+			operpos = pos;
 			++pos;
-			double rhs = getoperand();
-			if (tokenvec[pos].name == "/" && rhs == 0)throw std::runtime_error("divided by zero at pos " + std::to_string(pos) + " !");
+			if (pos < vecsize) {
+				rhs = getoperand();
+			}
+			else {
+				throw std::runtime_error("missing operand at " + std::to_string(pos) + " !");
+			}
+			if (tokenvec[operpos].name == "/" && rhs == 0)throw std::runtime_error("divided by zero at pos " + std::to_string(pos) + " !");
 			value = oper(value, rhs);
 		}
 		return value;	
 	}
 
 	double lowerops() {
-		double value = higherops();
+		double value = higherops(), rhs;
 		while (pos < vecsize && (tokenvec[pos].name == "+" || tokenvec[pos].name == "-")) {
 			const auto& oper = opsmap.at(tokenvec[pos].name);
 			++pos;
-			double rhs = higherops();
+			if (pos < vecsize) {
+				rhs = higherops();
+			}
+			else {
+				throw std::runtime_error("missing operand at " + std::to_string(pos) + " !");
+			}			
 			value = oper(value, rhs);
 		}
 		return value;
